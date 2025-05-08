@@ -6,64 +6,177 @@
   <title>Alcohol Dilution Calculator</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       padding: 2rem;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
+      background: #f7f7f7;
+      color: #333;
     }
-    label, input {
-      display: block;
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    label {
       margin-top: 1rem;
+      display: block;
+      font-weight: bold;
     }
-    input {
-      padding: 0.5rem;
+    input[type=number], input[type=range], select {
       width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .slider-value {
+      text-align: right;
+      font-size: 0.9em;
+      color: #555;
     }
     button {
-      margin-top: 1.5rem;
-      padding: 0.7rem;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
       font-size: 1rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #2980b9;
     }
     .result {
       margin-top: 2rem;
       font-weight: bold;
+      font-size: 1.2rem;
+      color: #27ae60;
+      text-align: center;
+    }
+    .error {
+      color: #e74c3c;
     }
   </style>
 </head>
 <body>
 
   <h1>Alcohol Dilution Calculator</h1>
-  <p>Calculate the final alcohol concentration after dilution.</p>
 
-  <label for="initialVolume">Initial volume (ml):</label>
-  <input type="number" id="initialVolume" required step="any" />
+  <label for="mode">Choose calculation mode:</label>
+  <select id="mode" onchange="updateMode()">
+    <option value="finalPercent">🔹 Final concentration (you know final volume)</option>
+    <option value="waterNeeded">🔹 Water to add (you want target %)</option>
+    <option value="finalVolume">🔹 Final volume (you want target %)</option>
+  </select>
 
-  <label for="initialPercent">Initial concentration (%):</label>
-  <input type="number" id="initialPercent" required step="any" />
+  <div id="inputs">
+    <!-- Common inputs -->
+    <label for="initialVolume">Initial volume (ml):</label>
+    <input type="number" id="initialVolume" value="340" step="0.1" min="0" oninput="updateSliderValue('initialVolume')"/>
 
-  <label for="finalVolume">Final volume (ml):</label>
-  <input type="number" id="finalVolume" required step="any" />
+    <label for="initialPercent">Initial concentration (%):</label>
+    <input type="range" id="initialPercent" min="0" max="100" value="80" step="0.1" oninput="updateSliderValue('initialPercent')">
+    <div class="slider-value">Selected: <span id="initialPercentValue">80</span>%</div>
+
+    <!-- Final volume (only for mode = finalPercent) -->
+    <div id="finalVolumeGroup">
+      <label for="finalVolume">Final volume (ml):</label>
+      <input type="range" id="finalVolume" min="100" max="1000" value="500" step="10" oninput="updateSliderValue('finalVolume')">
+      <div class="slider-value">Selected: <span id="finalVolumeValue">500</span> ml</div>
+    </div>
+
+    <!-- Target percent (for other modes) -->
+    <div id="targetPercentGroup" style="display:none;">
+      <label for="targetPercent">Target concentration (%):</label>
+      <input type="range" id="targetPercent" min="1" max="95" value="40" step="0.1" oninput="updateSliderValue('targetPercent')">
+      <div class="slider-value">Selected: <span id="targetPercentValue">40</span>%</div>
+    </div>
+  </div>
 
   <button onclick="calculate()">Calculate</button>
 
   <div class="result" id="result"></div>
 
   <script>
+    function updateSliderValue(id) {
+      const value = document.getElementById(id).value;
+      document.getElementById(id + 'Value').textContent = value;
+      if (id === 'initialVolume') {
+        document.getElementById(id).value = value;
+      }
+    }
+
+    function updateMode() {
+      const mode = document.getElementById("mode").value;
+      document.getElementById("finalVolumeGroup").style.display = (mode === "finalPercent") ? "block" : "none";
+      document.getElementById("targetPercentGroup").style.display = (mode !== "finalPercent") ? "block" : "none";
+      document.getElementById("result").textContent = "";
+    }
+
     function calculate() {
+      const mode = document.getElementById("mode").value;
       const initialVolume = parseFloat(document.getElementById('initialVolume').value);
       const initialPercent = parseFloat(document.getElementById('initialPercent').value);
-      const finalVolume = parseFloat(document.getElementById('finalVolume').value);
-
-      if (isNaN(initialVolume) || isNaN(initialPercent) || isNaN(finalVolume) || finalVolume === 0) {
-        document.getElementById('result').textContent = 'Please enter valid numbers.';
+      const finalVolume = parseFloat(document.getElementById('finalVolume')?.value || 0);
+      const targetPercent = parseFloat(document.getElementById('targetPercent')?.value || 0);
+      
+      if (isNaN(initialVolume) || isNaN(initialPercent) || initialVolume <= 0 || initialPercent < 0 || initialPercent > 100) {
+        displayError("Please enter valid positive values for initial volume and concentration.");
         return;
       }
 
       const pureAlcohol = initialVolume * (initialPercent / 100);
-      const finalPercent = (pureAlcohol / finalVolume) * 100;
+      let resultText = "";
 
-      document.getElementById('result').textContent = `Final concentration: ${finalPercent.toFixed(2)}%`;
+      if (mode === "finalPercent") {
+        if (!finalVolume || finalVolume < initialVolume) {
+          resultText = "Final volume must be greater than or equal to initial volume.";
+        } else {
+          const finalPercent = (pureAlcohol / finalVolume) * 100;
+          resultText = `Final concentration: ${finalPercent.toFixed(2)}%`;
+        }
+      }
+
+      else if (mode === "waterNeeded") {
+        if (targetPercent >= initialPercent) {
+          resultText = "Target percent must be lower than initial percent.";
+        } else {
+          const finalVol = pureAlcohol / (targetPercent / 100);
+          const waterToAdd = finalVol - initialVolume;
+          resultText = `Add ${waterToAdd.toFixed(2)} ml of water. Final volume: ${finalVol.toFixed(2)} ml.`;
+        }
+      }
+
+      else if (mode === "finalVolume") {
+        if (targetPercent >= initialPercent) {
+          resultText = "Target percent must be lower than initial percent.";
+        } else {
+          const finalVol = pureAlcohol / (targetPercent / 100);
+          resultText = `Required final volume to reach ${targetPercent}%: ${finalVol.toFixed(2)} ml`;
+        }
+      }
+
+      displayResult(resultText);
     }
+
+    function displayError(message) {
+      document.getElementById("result").textContent = message;
+      document.getElementById("result").classList.add("error");
+    }
+
+    function displayResult(message) {
+      document.getElementById("result").textContent = message;
+      document.getElementById("result").classList.remove("error");
+    }
+
+    // Initial update
+    updateSliderValue('initialPercent');
+    updateSliderValue('finalVolume');
+    updateSliderValue('targetPercent');
   </script>
 </body>
 </html>
