@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alcohol Dilution Calculator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    label, input {
+      display: block;
+      margin-top: 1rem;
+    }
+    input {
+      padding: 0.5rem;
+      width: 100%;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.7rem;
+      font-size: 1rem;
+    }
+    .result {
+      margin-top: 2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Alcohol Dilution Calculator</h1>
+  <p>Calculate the final alcohol concentration after dilution.</p>
+
+  <label for="initialVolume">Initial volume (ml):</label>
+  <input type="number" id="initialVolume" required step="any" />
+
+  <label for="initialPercent">Initial concentration (%):</label>
+  <input type="number" id="initialPercent" required step="any" />
+
+  <label for="finalVolume">Final volume (ml):</label>
+  <input type="number" id="finalVolume" required step="any" />
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    function calculate() {
+      const initialVolume = parseFloat(document.getElementById('initialVolume').value);
+      const initialPercent = parseFloat(document.getElementById('initialPercent').value);
+      const finalVolume = parseFloat(document.getElementById('finalVolume').value);
+
+      if (isNaN(initialVolume) || isNaN(initialPercent) || isNaN(finalVolume) || finalVolume === 0) {
+        document.getElementById('result').textContent = 'Please enter valid numbers.';
+        return;
+      }
+
+      const pureAlcohol = initialVolume * (initialPercent / 100);
+      const finalPercent = (pureAlcohol / finalVolume) * 100;
+
+      document.getElementById('result').textContent = `Final concentration: ${finalPercent.toFixed(2)}%`;
+    }
+  </script>
+</body>
+</html>
