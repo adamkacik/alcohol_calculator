@@ -34,15 +34,6 @@
       text-align: right;
       font-size: 0.9em;
       color: #555;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .slider-value input {
-      width: 60px;
-      padding: 0.25rem;
-      font-size: 0.9em;
-      margin-left: 10px;
     }
     button {
       background-color: #3498db;
@@ -66,9 +57,6 @@
       color: #27ae60;
       text-align: center;
     }
-    .error {
-      color: #e74c3c;
-    }
   </style>
 </head>
 <body>
@@ -85,36 +73,27 @@
   <div id="inputs">
     <!-- Common inputs -->
     <label for="initialVolume">Initial volume (ml):</label>
-    <input type="number" id="initialVolume" value="340" step="0.1" min="0" oninput="updateSliderValue('initialVolume')"/>
+    <input type="number" id="initialVolume" value="340" step="0.1"/>
 
     <label for="initialPercent">Initial concentration (%):</label>
     <input type="range" id="initialPercent" min="0" max="100" value="80" step="0.1" oninput="updateSliderValue('initialPercent')">
-    <div class="slider-value">
-      <span>Selected:</span>
-      <input type="number" id="initialPercentInput" value="80" min="0" max="100" step="0.1" oninput="updateValueFromInput('initialPercent')">
-      <span>%</span>
-    </div>
+    <input type="number" id="initialPercentInput" value="80" min="0" max="100" step="0.1" oninput="updateInputValue('initialPercent')">
+    <div class="slider-value">Selected: <span id="initialPercentValue">80</span>%</div>
 
     <!-- Final volume (only for mode = finalPercent) -->
     <div id="finalVolumeGroup">
       <label for="finalVolume">Final volume (ml):</label>
       <input type="range" id="finalVolume" min="100" max="1000" value="500" step="10" oninput="updateSliderValue('finalVolume')">
-      <div class="slider-value">
-        <span>Selected:</span>
-        <input type="number" id="finalVolumeInput" value="500" min="100" max="1000" step="10" oninput="updateValueFromInput('finalVolume')">
-        <span>ml</span>
-      </div>
+      <input type="number" id="finalVolumeInput" value="500" min="100" max="1000" step="10" oninput="updateInputValue('finalVolume')">
+      <div class="slider-value">Selected: <span id="finalVolumeValue">500</span> ml</div>
     </div>
 
     <!-- Target percent (for other modes) -->
     <div id="targetPercentGroup" style="display:none;">
       <label for="targetPercent">Target concentration (%):</label>
       <input type="range" id="targetPercent" min="1" max="95" value="40" step="0.1" oninput="updateSliderValue('targetPercent')">
-      <div class="slider-value">
-        <span>Selected:</span>
-        <input type="number" id="targetPercentInput" value="40" min="1" max="95" step="0.1" oninput="updateValueFromInput('targetPercent')">
-        <span>%</span>
-      </div>
+      <input type="number" id="targetPercentInput" value="40" min="1" max="95" step="0.1" oninput="updateInputValue('targetPercent')">
+      <div class="slider-value">Selected: <span id="targetPercentValue">40</span>%</div>
     </div>
   </div>
 
@@ -124,11 +103,15 @@
 
   <script>
     function updateSliderValue(id) {
-      const value = document.getElementById(id).value;
-      document.getElementById(id + 'Value').textContent = value;
-      if (id === 'initialVolume') {
-        document.getElementById(id).value = value;
-      }
+      const sliderValue = document.getElementById(id).value;
+      document.getElementById(id + 'Value').textContent = sliderValue;
+      document.getElementById(id + 'Input').value = sliderValue;  // Update input field with slider value
+    }
+
+    function updateInputValue(id) {
+      const inputValue = document.getElementById(id + 'Input').value;
+      document.getElementById(id + 'Value').textContent = inputValue;
+      document.getElementById(id).value = inputValue;  // Update slider with input value
     }
 
     function updateMode() {
@@ -138,23 +121,12 @@
       document.getElementById("result").textContent = "";
     }
 
-    function updateValueFromInput(id) {
-      const value = document.getElementById(id + 'Input').value;
-      document.getElementById(id).value = value;
-      updateSliderValue(id); // Update slider to match input value
-    }
-
     function calculate() {
       const mode = document.getElementById("mode").value;
       const initialVolume = parseFloat(document.getElementById('initialVolume').value);
       const initialPercent = parseFloat(document.getElementById('initialPercent').value);
       const finalVolume = parseFloat(document.getElementById('finalVolume')?.value || 0);
       const targetPercent = parseFloat(document.getElementById('targetPercent')?.value || 0);
-      
-      if (isNaN(initialVolume) || isNaN(initialPercent) || initialVolume <= 0 || initialPercent < 0 || initialPercent > 100) {
-        displayError("Please enter valid positive values for initial volume and concentration.");
-        return;
-      }
 
       const pureAlcohol = initialVolume * (initialPercent / 100);
       let resultText = "";
@@ -187,17 +159,7 @@
         }
       }
 
-      displayResult(resultText);
-    }
-
-    function displayError(message) {
-      document.getElementById("result").textContent = message;
-      document.getElementById("result").classList.add("error");
-    }
-
-    function displayResult(message) {
-      document.getElementById("result").textContent = message;
-      document.getElementById("result").classList.remove("error");
+      document.getElementById("result").textContent = resultText;
     }
 
     // Initial update
