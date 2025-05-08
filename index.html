@@ -34,6 +34,15 @@
       text-align: right;
       font-size: 0.9em;
       color: #555;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .slider-value input {
+      width: 60px;
+      padding: 0.25rem;
+      font-size: 0.9em;
+      margin-left: 10px;
     }
     button {
       background-color: #3498db;
@@ -80,20 +89,32 @@
 
     <label for="initialPercent">Initial concentration (%):</label>
     <input type="range" id="initialPercent" min="0" max="100" value="80" step="0.1" oninput="updateSliderValue('initialPercent')">
-    <div class="slider-value">Selected: <span id="initialPercentValue">80</span>%</div>
+    <div class="slider-value">
+      <span>Selected:</span>
+      <input type="number" id="initialPercentInput" value="80" min="0" max="100" step="0.1" oninput="updateValueFromInput('initialPercent')">
+      <span>%</span>
+    </div>
 
     <!-- Final volume (only for mode = finalPercent) -->
     <div id="finalVolumeGroup">
       <label for="finalVolume">Final volume (ml):</label>
       <input type="range" id="finalVolume" min="100" max="1000" value="500" step="10" oninput="updateSliderValue('finalVolume')">
-      <div class="slider-value">Selected: <span id="finalVolumeValue">500</span> ml</div>
+      <div class="slider-value">
+        <span>Selected:</span>
+        <input type="number" id="finalVolumeInput" value="500" min="100" max="1000" step="10" oninput="updateValueFromInput('finalVolume')">
+        <span>ml</span>
+      </div>
     </div>
 
     <!-- Target percent (for other modes) -->
     <div id="targetPercentGroup" style="display:none;">
       <label for="targetPercent">Target concentration (%):</label>
       <input type="range" id="targetPercent" min="1" max="95" value="40" step="0.1" oninput="updateSliderValue('targetPercent')">
-      <div class="slider-value">Selected: <span id="targetPercentValue">40</span>%</div>
+      <div class="slider-value">
+        <span>Selected:</span>
+        <input type="number" id="targetPercentInput" value="40" min="1" max="95" step="0.1" oninput="updateValueFromInput('targetPercent')">
+        <span>%</span>
+      </div>
     </div>
   </div>
 
@@ -115,6 +136,12 @@
       document.getElementById("finalVolumeGroup").style.display = (mode === "finalPercent") ? "block" : "none";
       document.getElementById("targetPercentGroup").style.display = (mode !== "finalPercent") ? "block" : "none";
       document.getElementById("result").textContent = "";
+    }
+
+    function updateValueFromInput(id) {
+      const value = document.getElementById(id + 'Input').value;
+      document.getElementById(id).value = value;
+      updateSliderValue(id); // Update slider to match input value
     }
 
     function calculate() {
