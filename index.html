@@ -82,6 +82,9 @@
 
     <!-- Final volume (only for mode = finalPercent) -->
     <div id="finalVolumeGroup">
+      <label for="maxFinalVolumeInput">Max final volume (ml):</label>
+      <input type="number" id="maxFinalVolumeInput" value="1000" step="10" min="100" oninput="updateFinalVolumeMax()">
+
       <label for="finalVolume">Final volume (ml):</label>
       <input type="range" id="finalVolume" min="100" max="1000" value="500" step="10" oninput="updateSliderValue('finalVolume')">
       <input type="number" id="finalVolumeInput" value="500" min="100" max="1000" step="10" oninput="updateInputValue('finalVolume')">
@@ -103,15 +106,33 @@
 
   <script>
     function updateSliderValue(id) {
-      const sliderValue = document.getElementById(id).value;
-      document.getElementById(id + 'Value').textContent = sliderValue;
-      document.getElementById(id + 'Input').value = sliderValue;  // Update input field with slider value
+      const value = document.getElementById(id).value;
+      document.getElementById(id + 'Value').textContent = value;
+      document.getElementById(id + 'Input').value = value;
     }
 
     function updateInputValue(id) {
-      const inputValue = document.getElementById(id + 'Input').value;
-      document.getElementById(id + 'Value').textContent = inputValue;
-      document.getElementById(id).value = inputValue;  // Update slider with input value
+      const value = document.getElementById(id + 'Input').value;
+      document.getElementById(id).value = value;
+      document.getElementById(id + 'Value').textContent = value;
+    }
+
+    function updateFinalVolumeMax() {
+      const newMax = parseFloat(document.getElementById('maxFinalVolumeInput').value);
+      const slider = document.getElementById('finalVolume');
+      const input = document.getElementById('finalVolumeInput');
+
+      if (newMax >= 100) {
+        slider.max = newMax;
+        input.max = newMax;
+
+        // Adjust value if it exceeds new max
+        if (parseFloat(slider.value) > newMax) {
+          slider.value = newMax;
+          input.value = newMax;
+          updateSliderValue('finalVolume');
+        }
+      }
     }
 
     function updateMode() {
@@ -162,7 +183,7 @@
       document.getElementById("result").textContent = resultText;
     }
 
-    // Initial update
+    // Initial values
     updateSliderValue('initialPercent');
     updateSliderValue('finalVolume');
     updateSliderValue('targetPercent');
